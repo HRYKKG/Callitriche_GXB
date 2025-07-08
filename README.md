@@ -41,7 +41,7 @@ Callitriche_gxb/
 ## 3. Retrieve the confidential data
 
 `Data/` is **not** version‑controlled. Download it from the secure location
-provided by the project lead and extract it into `Data/`, e.g.:
+provided by the project lead and extract it into `Data/`
 <!---
 ```bash
 # placeholder – replace with actual URL or instructions
