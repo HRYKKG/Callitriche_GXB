@@ -42,13 +42,13 @@ Callitriche_gxb/
 
 `Data/` is **not** version‑controlled. Download it from the secure location
 provided by the project lead and extract it into `Data/`, e.g.:
-
+<!---
 ```bash
 # placeholder – replace with actual URL or instructions
 wget -O Data/data_secure.zip "https://example.org/secure/download?id=XXXXX"
 unzip Data/data_secure.zip -d Data
 ```
-
+-->
 ---
 
 ## 4. Install R / Bioconductor packages
