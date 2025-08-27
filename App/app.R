@@ -10,10 +10,28 @@ library(rclipboard)
 library(heatmaply)
 library(DBI)
 library(RSQLite)
+library(pool) 
 
 # SQLiteデータベースファイルへの接続
 db_file <- "../Data/Callitriche.sqlite"
-con <- dbConnect(SQLite(), dbname = db_file)
+#con <- dbConnect(SQLite(), dbname = db_file)
+con <- pool::dbPool(drv = RSQLite::SQLite(), dbname = db_file)
+
+# 起動時の PRAGMA 設定（トランザクションなし）
+local({
+  conn <- pool::poolCheckout(con)
+  on.exit(pool::poolReturn(conn), add = TRUE)
+
+  # busy_timeout は都度設定でOK
+  DBI::dbExecute(conn, "PRAGMA busy_timeout=5000;")
+
+  # すでに WAL なら何もしない（永続設定）
+  jm <- tolower(DBI::dbGetQuery(conn, "PRAGMA journal_mode;")[1,1])
+  if (jm != "wal") {
+    # 失敗してもアプリは続行したいので try() で保護
+    try(DBI::dbExecute(conn, "PRAGMA journal_mode=WAL;"), silent = TRUE)
+  }
+})
 
 # search_dataは動作の都合上、起動時に全件読み込み（メモリ上に保持）
 search_data <- dbGetQuery(con, "SELECT * FROM search_data")
@@ -59,14 +77,10 @@ ui <- dashboardPage(
   )
 )
 
+# セッション終了時にSQLiteの接続をクローズする
+shiny::onStop(function() pool::poolClose(con))
+
 server <- shinyServer(function(input, output, session) {
-  # セッション終了時にSQLiteの接続をクローズする
-  session$onSessionEnded(function() {
-    dbDisconnect(con)
-  })
-  
-  # search_dataはすでにメモリ上にあるので、そのまま利用
-  
   # サーバースクリプトの読み込み
   source('server_graph.R', local = TRUE)
   source('server_hm.R', local = TRUE)
